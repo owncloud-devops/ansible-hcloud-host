@@ -4,7 +4,7 @@ This is an [Ansible](https://www.ansible.com) playbook to setup a single Ubuntu 
 
 ## Requirements
 
-+ Ansible >= 2.5
++ Ansible
 
 ## Tools
 
@@ -13,7 +13,12 @@ This playbook is designed to install a ubuntu server, add users, keys, configura
 + [Docker](https://www.docker.com)
 + [Docker-compose](https://docs.docker.com/compose/install/)
 
-## Installing on production
+## Installing on hcloud
+
+Setup ansible to work with hcloud host
+TODO add description
+
+Copy pubkey from functional drone user to keys/drone.pubkey and functional debug user to keys/debug.pubkey
 
 Copy the hosts example file and change the values to your needs:
 

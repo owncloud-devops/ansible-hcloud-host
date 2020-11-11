@@ -1,35 +1,75 @@
 ---
-- name: Update and Upgrade host os
+- name: Update apt packages
+    apt:
+      update_cache: "yes"
+      force_apt_get: "yes"
 
-- name: Install docker-ce on host os
+- name: Install packages needed for Docker
+  apt:
+    name: "{{ docker_packages }}"
+    state: present
+    force_apt_get: "yes"
 
-- name: Install docker-compose on host os
+- name: Add Docker GPG apt Key
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
 
+- name: Save the current Ubuntu release version into a variable
+  shell: lsb_release -cs
+  register: ubuntu_version
+
+- name: Add Docker Repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ubuntu_version.stdout }} stable"
+    state: present
+
+- name: Update apt packages
+  apt:
+    update_cache: "yes"
+    force_apt_get: "yes"
+
+- name: Install Docker
+  apt:
+    name: "docker-ce"
+    state: present
+    force_apt_get: "yes"
+
+- name: Install Docker Compose
+  get_url:
+    url: https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-Linux-x86_64
+    dest: "/usr/local/bin/docker-compose"
+    mode: 0755
+
+- name: Create docker group
+  group:
+    name: "docker"
+    state: present
 
 - name: Add a new functional user "drone"
   user:
-    name=drone
-    password={{ drone_password }}
+    name: drone
+    password: {{ drone_password }}
+    group: docker
 
 - name: Add a user named debug for developers
   user:
-    name=debug
-    password={{ debug_password }}
-
-- name: Add debug user to the sudoers
-  copy:
-        dest: "/etc/sudoers.d/debug"
-        content: "debug  ALL=(ALL)  NOPASSWD: ALL"
+    name: debug
+    password: {{ debug_password }}
+    groups: sudo,docker
+    append: yes
 
 - name: Deploy SSH Key for drone
-  authorized_key: user=drone
-                  key="{{ lookup('file', './keys/drone.pubkey' }}"
-                  state=present
+  authorized_key:
+    user: drone
+    key: "{{ lookup('file', './keys/drone.pubkey' }}"
+    state: present
 
 - name: Deploy SSH Key for debug
-  authorized_key: user=debug
-                  key="{{ lookup('file', './keys/debug.pubkey' }}"
-                  state=present
+  authorized_key:
+    user: debug
+    key: "{{ lookup('file', './keys/debug.pubkey' }}"
+    state: present
 
 - name: Disable Password Authentication
   lineinfile:
@@ -54,5 +94,5 @@
 handlers:
 - name: restart ssh
   service:
-    name=sshd
-    state=restarted
+    name: sshd
+    state: restarted
