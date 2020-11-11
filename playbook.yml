@@ -1,0 +1,11 @@
+---
+  - name: Provisionning webservers
+    hosts: webservers
+    become: yes
+    vars:
+      user: root
+      group: docker
+      traefik_dir: /var/www/traefik
+    roles:
+      - { role: docker, tags: docker }
+      - { role: traefik, tags: traefik }
