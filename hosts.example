@@ -1,13 +1,8 @@
-[webservers]
+[hosts]
 example.com
 
-[webservers:vars]
+[hosts:vars]
 ansible_python_interpreter=/usr/bin/python3
 
-acme_email=your@email.com
-acme_domain=example.com
-acme_provider=example # Comment this line to completly disable acme
-
-traefik_api_url=dashboard.example.com
-traefik_api_user=demo
-traefik_api_password=my-secret-password
+drone_password: 'secure_passwd'
+debug_passwd: 'secure_passwd'

@@ -1,11 +1,58 @@
 ---
-  - name: Provisionning webservers
-    hosts: webservers
-    become: yes
-    vars:
-      user: root
-      group: docker
-      traefik_dir: /var/www/traefik
-    roles:
-      - { role: docker, tags: docker }
-      - { role: traefik, tags: traefik }
+- name: Update and Upgrade host os
+
+- name: Install docker-ce on host os
+
+- name: Install docker-compose on host os
+
+
+- name: Add a new functional user "drone"
+  user:
+    name=drone
+    password={{ drone_password }}
+
+- name: Add a user named debug for developers
+  user:
+    name=debug
+    password={{ debug_password }}
+
+- name: Add debug user to the sudoers
+  copy:
+        dest: "/etc/sudoers.d/debug"
+        content: "debug  ALL=(ALL)  NOPASSWD: ALL"
+
+- name: Deploy SSH Key for drone
+  authorized_key: user=drone
+                  key="{{ lookup('file', './keys/drone.pubkey' }}"
+                  state=present
+
+- name: Deploy SSH Key for debug
+  authorized_key: user=debug
+                  key="{{ lookup('file', './keys/debug.pubkey' }}"
+                  state=present
+
+- name: Disable Password Authentication
+  lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp='^PasswordAuthentication'
+        line="PasswordAuthentication no"
+        state=present
+        backup=yes
+  notify:
+    - restart ssh
+
+- name: Disable Root Login
+  lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp='^PermitRootLogin'
+        line="PermitRootLogin no"
+        state=present
+        backup=yes
+  notify:
+    - restart ssh
+
+handlers:
+- name: restart ssh
+  service:
+    name=sshd
+    state=restarted
